@@ -1,6 +1,10 @@
 # これはなに？
 
-@gatchan0807 が GAS を書く時に使う clasp + TypeScript + VSCode の構成を準備する時に使うファイル群（リポジトリ）
+社内のチームのスプレッドシートの施策リストから、今週議論されたものをフィルターしてSlackにぽいっと投げるだけの簡単な子
+
+## fork元
+
+[https://github.com/gatchan0807/gas-template-by-clasp-and-typescript](https://github.com/gatchan0807/gas-template-by-clasp-and-typescript)
 
 # 使い方
 
