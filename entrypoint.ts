@@ -3,7 +3,7 @@ interface Measure {
   director: string;
   about: string;
   status: string;
-  meetingDay: string;
+  sheetId: string;
 }
 
 interface Attachment {
@@ -31,13 +31,13 @@ function entrypoint() {
 }
 
 function _getMeasureList(): Array<Measure> {
-  const spreadSheetId = '1SPq1rq7BOHRHLhAqd7Qxo2eJN3tDG7qAJYIthj6KQw0'; // SEOチーム管理シート
+  const spreadSheetId = '1vTkCa84GVVv377CaUJrqolMxsgNgUzd8UvbYLeHEnWg'; // SEOチーム管理シート
   const spreadsheet = SpreadsheetApp.openById(spreadSheetId);
 
   const sheet = spreadsheet.getSheetByName('施策案リスト');
 
   const lastRowNumber = sheet.getLastRow() - 1;
-  const rawMeasures = sheet.getRange(2, 1, lastRowNumber, 7).getValues();
+  const rawMeasures = sheet.getRange(2, 1, lastRowNumber, 13).getValues();
 
   const measures = _convertMeasures(rawMeasures);
 
@@ -47,11 +47,11 @@ function _getMeasureList(): Array<Measure> {
 function _convertMeasures(raw: Array<any>): Array<Measure> {
   let measures = raw.map(rawMeasure => {
     let m: Measure = {
-      id: rawMeasure[0],
-      director: rawMeasure[1],
+      id: rawMeasure[1],
+      director: rawMeasure[11],
       about: rawMeasure[2],
-      status: rawMeasure[4],
-      meetingDay: rawMeasure[6]
+      status: rawMeasure[6],
+      sheetId: rawMeasure[12]
     };
     return m;
   });
@@ -61,8 +61,7 @@ function _convertMeasures(raw: Array<any>): Array<Measure> {
 function _notifyWithSlack(measureList: Array<Measure>) {
   const formattedText = _formatText(measureList);
 
-  const SLACK_URL =
-    '[https://hooks.slack.com/services/]'; // 本番
+  const SLACK_URL = '[https://hooks.slack.com/services/]'; // 本番
   // const SLACK_URL ='[https://hooks.slack.com/services/]'; // テスト
   let options = {
     method: 'post',
@@ -74,27 +73,7 @@ function _notifyWithSlack(measureList: Array<Measure>) {
 }
 
 function _filterMeasureList(measureList: Array<Measure>): Array<Measure> {
-  let today = Utilities.formatDate(new Date(), 'JST', 'yyyy/MM/dd');
   let filteredMeasureList = measureList.map(measure => {
-    if (measure.meetingDay !== '') {
-      return measure;
-    }
-  });
-
-  filteredMeasureList = filteredMeasureList.map(measure => {
-    if (
-      typeof measure !== 'undefined' &&
-      Utilities.formatDate(
-        new Date(measure.meetingDay),
-        'JST',
-        'yyyy/MM/dd'
-      ) === today
-    ) {
-      return measure;
-    }
-  });
-
-  filteredMeasureList = filteredMeasureList.map(measure => {
     if (
       typeof measure !== 'undefined' &&
       measure.status.indexOf('検討会判断待ち') !== -1
@@ -120,22 +99,18 @@ function _formatText(measureList: Array<Measure>): NotifyMessage {
           new Date(),
           'JST',
           'yyyy/MM/dd'
-        )}】 検討委員会起案リスト`
+        )}】 検討委員会判断待ちIssueリスト`
       }
     ]
   };
 
   let textList: Array<string> = measureList.map(measure => {
     return `
-【シートID No.${measure.id}】
+【Jira ID ${measure.id}】
 施策概要: ${measure.about}
 起案者: ${measure.director}
-会議日: ${Utilities.formatDate(
-      new Date(measure.meetingDay),
-      'JST',
-      'yyyy/MM/dd'
-    )}
 ステータス: ${measure.status}
+検討会施策シート番号: ${measure.sheetId}
 `;
   });
 
